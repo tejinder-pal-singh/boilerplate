@@ -64,49 +64,102 @@ A production-ready, full-stack TypeScript monorepo boilerplate with Next.js 14 a
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+
-- Docker & Docker Compose
-- Git
-- VSCode (recommended)
+1. **Prerequisites**
+   - Node.js >= 18
+   - pnpm >= 8
+   - Docker & Docker Compose
+   - Git
 
-### Setup Steps
-
-1. **Clone the repository**
+2. **Setup**
    ```bash
-   git clone <repository-url>
-   cd boiler-plate
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables**
-   ```bash
+   # Clone the repository
+   git clone [your-repo-url]
+   
+   # Install dependencies
+   pnpm install
+   
+   # Setup environment variables
    cp .env.example .env
-   # Edit .env with your configurations
+   
+   # Start development environment
+   pnpm dev
    ```
 
-4. **Start development environment**
-   ```bash
-   # Start all services with Docker
-   docker-compose up -d
+## 🔍 Debugging Guide
 
-   # Start development servers
-   npm run dev
-   ```
+### VSCode Debugging
+Pre-configured debug configurations are available for:
+- Backend API (F5)
+- Frontend Next.js (Chrome)
+- Unit Tests
+- E2E Tests
 
-5. **Access the applications**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:4000
-   - API Documentation: http://localhost:4000/api
-   - Health Check: http://localhost:4000/health
+### Common Issues
+1. **Port Conflicts**
+   - Frontend runs on 3000
+   - Backend runs on 4000
+   - Redis on 6379
+   - PostgreSQL on 5432
+
+2. **Database Issues**
+   - Run `docker-compose up db` for database only
+   - Check logs with `docker-compose logs db`
+
+3. **Cache Issues**
+   - Clear Turborepo cache: `pnpm turbo clean`
+   - Clear Next.js cache: `pnpm clean`
+
+## 🛡️ Security Features
+
+1. **API Security**
+   - Helmet.js security headers
+   - Rate limiting with Redis
+   - JWT authentication
+   - Input validation
+   - CORS protection
+   - XSS prevention
+   - CSRF protection
+   - SQL injection prevention
+
+2. **Infrastructure Security**
+   - Docker security best practices
+   - Secure environment variables
+   - Dependency scanning
+   - Regular security updates
+
+3. **Monitoring & Logging**
+   - OpenTelemetry integration
+   - Structured logging with Pino
+   - Error tracking
+   - Performance monitoring
+
+## 🔄 Development Workflow
+
+1. **Branch Strategy**
+   - main: production-ready code
+   - develop: integration branch
+   - feature/*: new features
+   - fix/*: bug fixes
+
+2. **Commit Convention**
+   - feat: new feature
+   - fix: bug fix
+   - docs: documentation
+   - style: formatting
+   - refactor: code restructuring
+   - test: adding tests
+   - chore: maintenance
+
+3. **Code Quality**
+   - ESLint for linting
+   - Prettier for formatting
+   - Husky for git hooks
+   - Jest for testing
+   - Playwright for E2E tests
 
 ## 🏗 Project Structure
 
-\`\`\`
+```
 /monorepo-root
   /apps
     /frontend          # Next.js application
@@ -119,7 +172,7 @@ A production-ready, full-stack TypeScript monorepo boilerplate with Next.js 14 a
     /docker          # Docker configurations
     /k8s             # Kubernetes manifests
   /docs             # Documentation
-\`\`\`
+```
 
 ## 🔧 Development Guide
 
@@ -135,33 +188,16 @@ The following environment variables are required:
 ### Running Tests
 ```bash
 # Run all tests
-npm test
+pnpm test
 
 # Run specific test suites
-npm run test:frontend
-npm run test:backend
-npm run test:e2e
+pnpm run test:frontend
+pnpm run test:backend
+pnpm run test:e2e
 
 # Run tests in watch mode
-npm run test:watch
+pnpm run test:watch
 ```
-
-### Debugging
-
-1. **Backend Debugging**
-   - Use VSCode's "Debug Backend" configuration
-   - Set breakpoints in your code
-   - Access logs at `http://localhost:4000/logs`
-   - Monitor API performance at `http://localhost:4000/monitoring`
-
-2. **Frontend Debugging**
-   - Use VSCode's "Debug Frontend" configuration
-   - Use React DevTools
-   - Check browser console for detailed logs
-
-3. **Database Debugging**
-   - Access logs in `logs/database`
-   - Use pgAdmin or any PostgreSQL client
 
 ### Code Quality
 
@@ -186,32 +222,6 @@ Detailed documentation is available in the `/docs` directory:
 - [Development Guide](docs/examples.md#development-guide) - Setup and development workflow
 - [Deployment Guide](docs/examples.md#deployment) - Production deployment instructions
 - [Contributing Guide](docs/examples.md#contributing) - Guidelines for contributors
-
-## 🔒 Security Features
-
-1. **API Security**
-   - Helmet security headers
-   - CORS protection
-   - Rate limiting
-   - JWT authentication
-   - API key validation
-   - Input validation
-   - SQL injection prevention
-   - XSS protection
-
-2. **Infrastructure Security**
-   - Docker security best practices
-   - Resource limits
-   - Health checks
-   - Secrets management
-   - SSL/TLS support
-
-3. **Monitoring & Logging**
-   - Structured logging
-   - Request tracing
-   - Error tracking
-   - Performance monitoring
-   - Audit logging
 
 ## 📈 Monitoring & Logging
 

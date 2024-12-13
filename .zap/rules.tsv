@@ -1,0 +1,7 @@
+10016	IGNORE	cookie without secure flag
+10020	IGNORE	X-Frame-Options Header
+10021	IGNORE	X-Content-Type-Options Header
+10034	IGNORE	Heartbleed OpenSSL Vulnerability
+10038	IGNORE	Content Security Policy (CSP) Header Not Set
+10063	IGNORE	Feature Policy Header Not Set
+90022	IGNORE	Application Error Disclosure
