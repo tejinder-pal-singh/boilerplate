@@ -1,38 +1,39 @@
-import { LoggerService } from '@nestjs/common';
-import * as pino from 'pino';
+import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
+import pino from 'pino';
 
-export class PinoLoggerService implements LoggerService {
+@Injectable()
+export class LoggerService implements NestLoggerService {
   private logger: pino.Logger;
 
   constructor() {
-    this.logger = pino({
-      level: process.env.LOG_LEVEL || 'info',
-      transport: process.env.LOG_PRETTY === 'true' 
-        ? { target: 'pino-pretty' }
-        : undefined,
-      base: {
-        env: process.env.NODE_ENV,
+    this.logger = pino.default({
+      level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+        },
       },
     });
   }
 
-  log(message: any, context?: string) {
-    this.logger.info({ context }, message);
+  log(message: string) {
+    this.logger.info(message);
   }
 
-  error(message: any, trace?: string, context?: string) {
-    this.logger.error({ context, trace }, message);
+  error(message: string, trace?: string) {
+    this.logger.error({ err: trace }, message);
   }
 
-  warn(message: any, context?: string) {
-    this.logger.warn({ context }, message);
+  warn(message: string) {
+    this.logger.warn(message);
   }
 
-  debug(message: any, context?: string) {
-    this.logger.debug({ context }, message);
+  debug(message: string) {
+    this.logger.debug(message);
   }
 
-  verbose(message: any, context?: string) {
-    this.logger.trace({ context }, message);
+  verbose(message: string) {
+    this.logger.trace(message);
   }
 }

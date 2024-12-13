@@ -1,0 +1,28 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Run type checking
+echo "🔍 Running type check..."
+pnpm tsc --noEmit || exit 1
+
+# Run ESLint
+echo "🔍 Running ESLint..."
+pnpm lint-staged || exit 1
+
+# Run tests
+echo "🧪 Running tests..."
+pnpm test || exit 1
+
+# Run security audit
+echo "🔒 Running security audit..."
+pnpm audit || exit 1
+
+# Check for sensitive data
+echo "🔍 Checking for sensitive data..."
+git diff --cached --name-only | xargs gitleaks protect --staged || exit 1
+
+# Check commit message
+echo "📝 Checking commit message..."
+pnpm commitlint --edit || exit 1
+
+echo "✅ Pre-commit checks passed!"

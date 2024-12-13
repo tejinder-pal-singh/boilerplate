@@ -1,69 +1,64 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as vault from 'node-vault';
+import vault from 'node-vault';
 import { PinoLoggerService } from '../services/logger.service';
 
 @Injectable()
-export class VaultService implements OnModuleInit {
+export class VaultService {
   private client: vault.client;
-  private readonly secretPath: string;
 
   constructor(
-    private configService: ConfigService,
-    private logger: PinoLoggerService,
+    private readonly configService: ConfigService,
+    private readonly logger: PinoLoggerService,
   ) {
-    this.secretPath = 'secret/data/app';
-    this.client = vault({
-      apiVersion: 'v1',
-      endpoint: this.configService.get('VAULT_ADDR', 'http://localhost:8200'),
-      token: this.configService.get('VAULT_TOKEN'),
+    this.initializeVault().catch(error => {
+      this.logger.error('Failed to connect to Vault', error.message);
     });
   }
 
-  async onModuleInit() {
-    try {
-      await this.client.health();
-    } catch (error) {
-      this.logger.error('Failed to connect to Vault', error);
-      // In development, we can continue without Vault
-      if (process.env.NODE_ENV === 'production') {
-        throw error;
-      }
-    }
+  private async initializeVault() {
+    const options = {
+      apiVersion: 'v1',
+      endpoint: this.configService.get('VAULT_ADDR', 'http://localhost:8200'),
+      token: this.configService.get('VAULT_TOKEN'),
+    };
+
+    this.client = vault(options);
   }
 
   async getSecret(key: string): Promise<string> {
     try {
-      const { data } = await this.client.read(this.secretPath);
+      const path = `secret/data/${key}`;
+      const { data } = await this.client.read(path);
       return data.data[key];
     } catch (error) {
-      this.logger.error(`Failed to get secret: ${key}`, error);
-      // Fallback to environment variable in development
-      if (process.env.NODE_ENV !== 'production') {
-        return this.configService.get(key);
+      this.logger.error(`Failed to get secret: ${key}`, error.message);
+      // Fallback to environment variable
+      const value = this.configService.get<string>(key);
+      if (!value) {
+        throw new Error(`Secret ${key} not found in Vault or environment`);
       }
-      throw error;
+      return value;
     }
   }
 
   async setSecret(key: string, value: string): Promise<void> {
     try {
-      const currentSecrets = await this.client.read(this.secretPath);
-      const updatedSecrets = {
-        ...currentSecrets.data.data,
-        [key]: value,
-      };
-
-      await this.client.write(this.secretPath, { data: updatedSecrets });
+      const path = `secret/data/${key}`;
+      await this.client.write(path, { data: { [key]: value } });
     } catch (error) {
-      this.logger.error(`Failed to set secret: ${key}`, error);
+      this.logger.error(`Failed to set secret: ${key}`, error.message);
       throw error;
     }
   }
 
-  async rotateSecret(key: string, generateNew: () => string): Promise<void> {
-    const newValue = generateNew();
-    await this.setSecret(key, newValue);
-    this.logger.info(`Rotated secret: ${key}`);
+  async deleteSecret(key: string): Promise<void> {
+    try {
+      const path = `secret/data/${key}`;
+      await this.client.delete(path);
+    } catch (error) {
+      this.logger.error(`Failed to delete secret: ${key}`, error.message);
+      throw error;
+    }
   }
 }

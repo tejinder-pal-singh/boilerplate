@@ -96,7 +96,8 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   private hasActiveSockets(userId: string): boolean {
-    return this.userSockets.has(userId) && this.userSockets.get(userId).size > 0;
+    const userSockets = this.userSockets.get(userId);
+    return this.userSockets.has(userId) && userSockets !== undefined && userSockets.size > 0;
   }
 
   private async updateUserPresence(userId: string, isOnline: boolean) {

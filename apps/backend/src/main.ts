@@ -89,7 +89,9 @@ async function bootstrap() {
   setupSwagger(app);
 
   // Health check endpoint
-  app.get('/health', () => ({ status: 'ok' }));
+  app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+  });
 
   // Start server
   const port = configService.get('PORT') || 4000;

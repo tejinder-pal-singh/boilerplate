@@ -1,0 +1,41 @@
+name: Docker Security Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'docker.io/your-org/your-app:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Run Dockle
+        uses: goodwithtech/dockle-action@v1
+        with:
+          image: 'your-org/your-app:latest'
+          format: 'list'
+          exit-code: '1'
+          ignore: 'CIS-DI-0001'
+
+      - name: Run Docker Scout
+        uses: docker/scout-action@v1
+        with:
+          command: quickview,cves
+          image: your-org/your-app:latest
+          only-severities: critical,high
+          exit-on-policy-failure: true

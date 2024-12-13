@@ -4,7 +4,7 @@ import { DataSource, QueryRunner } from 'typeorm';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
-  private queryRunner: QueryRunner;
+  private queryRunner: QueryRunner | null = null;
 
   constructor(
     private dataSource: DataSource,
@@ -17,29 +17,36 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
       await this.dataSource.initialize();
     }
     this.queryRunner = this.dataSource.createQueryRunner();
+    await this.queryRunner.connect();
   }
 
   async onModuleDestroy() {
     if (this.queryRunner) {
       await this.queryRunner.release();
+      this.queryRunner = null;
     }
   }
 
   async startTransaction(): Promise<QueryRunner> {
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    return queryRunner;
+    if (!this.queryRunner) {
+      throw new Error('QueryRunner not initialized');
+    }
+    await this.queryRunner.startTransaction();
+    return this.queryRunner;
   }
 
-  async commitTransaction(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.commitTransaction();
-    await queryRunner.release();
+  async commitTransaction(): Promise<void> {
+    if (!this.queryRunner) {
+      throw new Error('QueryRunner not initialized');
+    }
+    await this.queryRunner.commitTransaction();
   }
 
-  async rollbackTransaction(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.rollbackTransaction();
-    await queryRunner.release();
+  async rollbackTransaction(): Promise<void> {
+    if (!this.queryRunner) {
+      throw new Error('QueryRunner not initialized');
+    }
+    await this.queryRunner.rollbackTransaction();
   }
 
   async executeWithTransaction<T>(
@@ -48,10 +55,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     const queryRunner = await this.startTransaction();
     try {
       const result = await operation(queryRunner);
-      await this.commitTransaction(queryRunner);
+      await this.commitTransaction();
       return result;
     } catch (error) {
-      await this.rollbackTransaction(queryRunner);
+      await this.rollbackTransaction();
       throw error;
     }
   }
@@ -82,7 +89,10 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     await this.dataSource.query(`VACUUM ANALYZE ${table};`);
   }
 
-  async getQueryRunner(): Promise<QueryRunner> {
-    return this.dataSource.createQueryRunner();
+  getQueryRunner(): QueryRunner {
+    if (!this.queryRunner) {
+      throw new Error('QueryRunner not initialized');
+    }
+    return this.queryRunner;
   }
 }

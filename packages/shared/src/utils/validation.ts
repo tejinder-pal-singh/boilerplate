@@ -22,4 +22,4 @@ export function validateSchema<T>(schema: z.Schema<T>, data: unknown): ApiRespon
       },
     };
   }
-}
+}export default ExperimentManager;

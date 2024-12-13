@@ -1,104 +1,86 @@
-import { plainToClass } from 'class-transformer';
-import { IsString, IsNumber, IsBoolean, validateSync, IsOptional, Min, Max } from 'class-validator';
+import { plainToClass, Transform } from 'class-transformer';
+import { IsString, IsNumber, IsBoolean, validateSync, IsOptional } from 'class-validator';
 
 export class EnvironmentVariables {
   @IsNumber()
-  @Min(1)
-  @Max(65535)
-  PORT: number;
+  @Transform(({ value }) => parseInt(value, 10))
+  PORT: number = 3000;
 
   @IsString()
-  NODE_ENV: string;
+  NODE_ENV: string = 'development';
 
   // Database
   @IsString()
-  DB_HOST: string;
+  DB_HOST: string = 'localhost';
 
   @IsNumber()
-  DB_PORT: number;
+  @Transform(({ value }) => parseInt(value, 10))
+  DB_PORT: number = 5432;
 
   @IsString()
-  DB_USER: string;
+  DB_USER: string = 'postgres';
 
   @IsString()
-  DB_PASSWORD: string;
+  DB_PASSWORD: string = 'postgres';
 
   @IsString()
-  DB_NAME: string;
+  DB_NAME: string = 'boilerplate';
 
   @IsBoolean()
-  DB_SSL: boolean;
+  @Transform(({ value }) => value === 'true')
+  DB_SSL: boolean = false;
 
   @IsNumber()
-  @Min(1)
-  DB_POOL_SIZE: number;
+  @Transform(({ value }) => parseInt(value, 10))
+  DB_POOL_SIZE: number = 10;
 
   // Redis
   @IsString()
-  REDIS_HOST: string;
+  REDIS_HOST: string = 'localhost';
 
   @IsNumber()
-  REDIS_PORT: number;
+  @Transform(({ value }) => parseInt(value, 10))
+  REDIS_PORT: number = 6379;
 
   @IsString()
   @IsOptional()
-  REDIS_PASSWORD: string;
+  REDIS_PASSWORD?: string;
 
   @IsNumber()
-  REDIS_DB: number;
+  @Transform(({ value }) => parseInt(value, 10))
+  REDIS_DB: number = 0;
 
   // JWT
   @IsString()
-  JWT_SECRET: string;
+  JWT_SECRET: string = 'your-secret-key';
 
   @IsString()
-  JWT_EXPIRATION: string;
+  JWT_EXPIRATION: string = '15m';
 
   @IsString()
-  JWT_REFRESH_SECRET: string;
+  JWT_REFRESH_SECRET: string = 'your-refresh-secret';
 
   @IsString()
-  JWT_REFRESH_EXPIRATION: string;
+  JWT_REFRESH_EXPIRATION: string = '7d';
 
   // Rate Limiting
   @IsNumber()
-  RATE_LIMIT_TTL: number;
+  @Transform(({ value }) => parseInt(value, 10))
+  RATE_LIMIT_TTL: number = 60;
 
   @IsNumber()
-  RATE_LIMIT_MAX: number;
+  @Transform(({ value }) => parseInt(value, 10))
+  RATE_LIMIT_MAX: number = 100;
 
   // CORS
   @IsString()
-  ALLOWED_ORIGINS: string;
+  ALLOWED_ORIGINS: string = '*';
 }
 
 export function validate(config: Record<string, unknown>) {
-  const validatedConfig = plainToClass(
-    EnvironmentVariables,
-    {
-      PORT: parseInt(process.env.PORT, 10),
-      NODE_ENV: process.env.NODE_ENV,
-      DB_HOST: process.env.DB_HOST,
-      DB_PORT: parseInt(process.env.DB_PORT, 10),
-      DB_USER: process.env.DB_USER,
-      DB_PASSWORD: process.env.DB_PASSWORD,
-      DB_NAME: process.env.DB_NAME,
-      DB_SSL: process.env.DB_SSL === 'true',
-      DB_POOL_SIZE: parseInt(process.env.DB_POOL_SIZE, 10),
-      REDIS_HOST: process.env.REDIS_HOST,
-      REDIS_PORT: parseInt(process.env.REDIS_PORT, 10),
-      REDIS_PASSWORD: process.env.REDIS_PASSWORD,
-      REDIS_DB: parseInt(process.env.REDIS_DB, 10),
-      JWT_SECRET: process.env.JWT_SECRET,
-      JWT_EXPIRATION: process.env.JWT_EXPIRATION,
-      JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
-      JWT_REFRESH_EXPIRATION: process.env.JWT_REFRESH_EXPIRATION,
-      RATE_LIMIT_TTL: parseInt(process.env.RATE_LIMIT_TTL, 10),
-      RATE_LIMIT_MAX: parseInt(process.env.RATE_LIMIT_MAX, 10),
-      ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS,
-    },
-    { enableImplicitConversion: true },
-  );
+  const validatedConfig = plainToClass(EnvironmentVariables, config, {
+    enableImplicitConversion: true,
+  });
 
   const errors = validateSync(validatedConfig, {
     skipMissingProperties: false,
@@ -107,5 +89,6 @@ export function validate(config: Record<string, unknown>) {
   if (errors.length > 0) {
     throw new Error(errors.toString());
   }
+
   return validatedConfig;
 }
